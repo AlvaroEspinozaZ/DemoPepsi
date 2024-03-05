@@ -16,10 +16,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        
-    }
     void DelegateButtons()
     {
         for (int i = 0; i < btnsGame.Length; i++)
@@ -30,7 +26,7 @@ public class PlayerController : MonoBehaviour
     }
     public void PressButtons(int id)
     {       
-       Debug.Log("Soy button "+ id);
+       //Debug.Log("Soy button "+ id);
         idPress = id;
     }
 }
