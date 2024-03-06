@@ -10,11 +10,16 @@ public class SceneController : MonoBehaviour
     [SerializeField] Button btnNextScene;
     [SerializeField] int id;
     [SerializeField] float velocityFade;
+    [Header("Sonido")]
+    [SerializeField] AudioSource _audioController;
+    [SerializeField] AudioClip Transition;
     bool inFade;
     float velocityToFadeIn;
 
     private void Start()
     {
+        _audioController.clip = Transition;
+        _audioController.Play();
         for (int i = 0; i < btnReload.Length; i++)
         {
             btnReload[i].onClick.AddListener(delegate () { ReloadScene(); });
@@ -48,6 +53,7 @@ public class SceneController : MonoBehaviour
     }
     IEnumerator FadeExit()
     {
+        
         MiPanel1.SetActive(true);
         velocityToFadeIn = velocityToFadeIn + (velocityFade * Time.deltaTime);
         MiPanel1.GetComponent<Image>().color = new Color(0f, 0f, 0f, velocityToFadeIn);

@@ -10,6 +10,9 @@ public class GameController : MonoBehaviour
     [SerializeField] Text txtCoins;
     [SerializeField] Points _score;
     [SerializeField] Points _coins;
+    [Header("Level")]
+    [SerializeField] GameObject PnlLevel;
+    [SerializeField] Button[] btnNumbersLevel;
     [Header("Gameplay")]
     [SerializeField] GameObject slotsRight;
     [SerializeField] GameObject slotsLeft;
@@ -25,6 +28,12 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject PanelWin;
     [Header("Lose")]
     [SerializeField] GameObject PanelLose;
+
+    [Header("Sonido")]
+    [SerializeField] AudioSource _audioController;
+    [SerializeField] AudioClip check;
+    [SerializeField] AudioClip Golpe;
+    [SerializeField] AudioClip Ovacion;
     int count=0,countEnemy=0,limitSlots=0,coins=0,score =0,tmp=0;
     float x=0, y=0;
     float m = 0, n = 0;
@@ -32,15 +41,20 @@ public class GameController : MonoBehaviour
 
     private void Awake()
     {
+        PnlLevel.SetActive(true);
         txtCoins.text = "" + _coins.ScoreData;
         txtScore.text = "Score: " + _score.ScoreData;
         for (int i =0; i< btnPause.Length; i++)
         {
             btnPause[i].onClick.AddListener(delegate () { ScreamPause(); });
         }
-        StartCoroutine(LevelGame(LEVELGAME));      
+        for (int i = 0; i < btnNumbersLevel.Length; i++)
+        {
+            int id = i+1;
+            btnNumbersLevel[i].onClick.AddListener(delegate () { SetLevelByButton(id); });
+        }
 
-        PressButtons();
+        PressButtonsPlayer();
 
 
     }
@@ -55,7 +69,7 @@ public class GameController : MonoBehaviour
             countEnemy = 7;
         }      
     }
-    void PressButtons()
+    void PressButtonsPlayer()
     {
         for (int i = 0; i < _playerController.btnsGame.Length; i++)
         {
@@ -66,7 +80,9 @@ public class GameController : MonoBehaviour
     {          
         
         if(SlotsPlayer[count].id == _playerController.idPress)
-        {            
+        {
+            _audioController.clip = check;
+            _audioController.Play();
             //Debug.Log("Haber COmparando ids: "+ count );
             SlotsPlayer[count].GetComponent<SpriteRenderer>().sprite = Options[4].GetComponent<SpriteRenderer>().sprite;
             SlotsPlayer[count].GetComponent<SpriteRenderer>().color = Options[4].GetComponent<SpriteRenderer>().color;
@@ -150,7 +166,8 @@ public class GameController : MonoBehaviour
 
     IEnumerator WinEvent()
     {
-        ActualizarScores();
+        _audioController.clip = Golpe;
+        _audioController.Play();
         for (int i = 0; i < _playerController.btnsGame.Length; i++)
         {
             _playerController.btnsGame[i].interactable = false;
@@ -159,11 +176,16 @@ public class GameController : MonoBehaviour
         slotsLeft.SetActive(false);
         isPause = true;        
         yield return new WaitForSecondsRealtime(1f);
-        PanelWin.SetActive(true);        
+        PanelWin.SetActive(true);
+        ActualizarScores();
+        _audioController.clip = Ovacion;
+        _audioController.Play();
     }
     IEnumerator LoseEvent()
     {
-        for(int i = 0; i < _playerController.btnsGame.Length; i++)
+        _audioController.clip = Golpe;
+        _audioController.Play();
+        for (int i = 0; i < _playerController.btnsGame.Length; i++)
         {
             _playerController.btnsGame[i].interactable = false;
         }
@@ -172,6 +194,8 @@ public class GameController : MonoBehaviour
         isPause = true;
         yield return new WaitForSecondsRealtime(1f);
         PanelLose.SetActive(true);
+        _audioController.clip = Ovacion;
+        _audioController.Play();
     }
     IEnumerator ChangedData()
     {
@@ -199,5 +223,14 @@ public class GameController : MonoBehaviour
         _score.ScoreData = _score.ScoreData + score;
         StartCoroutine(ChangedData());
     }
+
+    public void SetLevelByButton(int id)
+    {
+        PnlLevel.SetActive(false);
+        Debug.Log("EL level es "+ id);
+        LEVELGAME = id;
+        StartCoroutine(LevelGame(LEVELGAME));
+    }
+
 }
  
