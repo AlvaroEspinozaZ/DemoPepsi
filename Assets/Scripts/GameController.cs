@@ -34,7 +34,7 @@ public class GameController : MonoBehaviour
     [SerializeField] AudioClip check;
     [SerializeField] AudioClip Golpe;
     [SerializeField] AudioClip Ovacion;
-    int count=0,countEnemy=0,limitSlots=0,coins=0,score =0,tmp=0;
+    int count = 0, countEnemy = 0, limitSlots = 0, coins = 0, score = 0, tmp = 0, yINT = 0, nINT = 0;
     float x=0, y=0;
     float m = 0, n = 0;
     bool isPause = false;
@@ -76,38 +76,21 @@ public class GameController : MonoBehaviour
             _playerController.btnsGame[i].onClick.AddListener(delegate () { NextButton(); });
         }      
     }
-    void NextButton()
-    {          
-        
-        if(SlotsPlayer[count].id == _playerController.idPress)
-        {
-            _audioController.clip = check;
-            _audioController.Play();
-            //Debug.Log("Haber COmparando ids: "+ count );
-            SlotsPlayer[count].GetComponent<SpriteRenderer>().sprite = Options[4].GetComponent<SpriteRenderer>().sprite;
-            SlotsPlayer[count].GetComponent<SpriteRenderer>().color = Options[4].GetComponent<SpriteRenderer>().color;
-            ++count;
-            if (SlotsPlayer[count].GetComponent<SpriteRenderer>().sprite == Options[4].GetComponent<SpriteRenderer>().sprite 
-                && SlotsPlayer[count].GetComponent<SpriteRenderer>().color == Options[4].GetComponent<SpriteRenderer>().color
-                )
-            {
-                StartCoroutine(WinEvent());
-            }
-        }
-    }
     IEnumerator LevelGame(int level)
     {
         limitSlots = LimitRamdomSlots();
         for (int i = 0; i < limitSlots; i++)
-        {       
+        {
             int j = Random.Range(0, level);
 
-            SlotsPlayer[i].GetComponent<SpriteRenderer>().color = Options[j].GetComponent<SpriteRenderer>().color;
-            SlotsPlayer[i].GetComponent<SpriteRenderer>().sprite = Options[j].GetComponent<SpriteRenderer>().sprite;
+            //SlotsPlayer[i].GetComponent<SpriteRenderer>().color = Options[j].GetComponent<SpriteRenderer>().color;
+            //SlotsPlayer[i].GetComponent<SpriteRenderer>().sprite = Options[j].GetComponent<SpriteRenderer>().sprite;
+            SlotsPlayer[i].anit = Instantiate(Options[j].GetComponent<Animator>(), SlotsPlayer[i].gameObject.transform.position,Quaternion.identity, slotsLeft.transform);
             SlotsPlayer[i].id = Options[j].id;
 
-            SlotsEnemy[i].GetComponent<SpriteRenderer>().color = Options[j].GetComponent<SpriteRenderer>().color;
-            SlotsEnemy[i].GetComponent<SpriteRenderer>().sprite = Options[j].GetComponent<SpriteRenderer>().sprite;
+            //SlotsEnemy[i].GetComponent<SpriteRenderer>().color = Options[j].GetComponent<SpriteRenderer>().color;
+            //SlotsEnemy[i].GetComponent<SpriteRenderer>().sprite = Options[j].GetComponent<SpriteRenderer>().sprite;
+            SlotsEnemy[i].anit = Instantiate(Options[j].GetComponent<Animator>(), SlotsEnemy[i].gameObject.transform.position, Quaternion.identity, slotsRight.transform);
             yield return new WaitForSecondsRealtime(0.35f);
         }
         for (int i = 0; i < _playerController.btnsGame.Length; i++)
@@ -116,40 +99,45 @@ public class GameController : MonoBehaviour
         }
         StartCoroutine(EnemySlots());
     }
-    public int LimitRamdomSlots()
-    {
-        int x = Random.Range(1,8) ;
-        return x;
+    void NextButton()
+    {                  
+        if(SlotsPlayer[count].id == _playerController.idPress)
+        {
+            ProduceSound(check);
+            //Debug.Log("Haber COmparando ids: "+ count );
+            //SlotsPlayer[count].GetComponent<SpriteRenderer>().sprite = Options[4].GetComponent<SpriteRenderer>().sprite;
+            //SlotsPlayer[count].GetComponent<SpriteRenderer>().color = Options[4].GetComponent<SpriteRenderer>().color;
+            SlotsPlayer[count].Abierto();
+            ++count;
+            if (count == limitSlots) 
+            {
+                StartCoroutine(WinEvent());
+            }
+        }
     }
-    public void ScreamPause()
-    {
-        if (!isPause)
-        {
-            PanelPause.SetActive(true);
-            isPause = true;
-        }
-        else
-        {
-            PanelPause.SetActive(false);
-            isPause = false;
-        }
-    }  
     IEnumerator EnemySlots()
     {
         yield return new WaitForSecondsRealtime(0.9f);
         if (!isPause)
         {
-            SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().color = Options[4].GetComponent<SpriteRenderer>().color;
-            SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().sprite = Options[4].GetComponent<SpriteRenderer>().sprite;
+            if (countEnemy < limitSlots)
+            {
+                ProduceSound(check);
+            }
+            //SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().color = Options[4].GetComponent<SpriteRenderer>().color;
+            //SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().sprite = Options[4].GetComponent<SpriteRenderer>().sprite;
+            SlotsEnemy[countEnemy].Abierto();
             ++countEnemy;
+            
         }
-        if (SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().sprite == Options[4].GetComponent<SpriteRenderer>().sprite
-                      && SlotsEnemy[countEnemy].GetComponent<SpriteRenderer>().color == Options[4].GetComponent<SpriteRenderer>().color
-                      )
+        if (countEnemy == limitSlots)
         {
             StartCoroutine(LoseEvent());
         }
-        StartCoroutine(EnemySlots());
+        else
+        {
+            StartCoroutine(EnemySlots());
+        }
         //for (int i = 0; i < limitSlots; i++)
         //{
         //    if (!isPause)
@@ -163,11 +151,10 @@ public class GameController : MonoBehaviour
         //    }
         //}
     }
-
     IEnumerator WinEvent()
     {
-        _audioController.clip = Golpe;
-        _audioController.Play();
+        ProduceSound(Golpe);
+        ActualizarScores();
         for (int i = 0; i < _playerController.btnsGame.Length; i++)
         {
             _playerController.btnsGame[i].interactable = false;
@@ -175,16 +162,13 @@ public class GameController : MonoBehaviour
         slotsRight.SetActive(false);
         slotsLeft.SetActive(false);
         isPause = true;        
-        yield return new WaitForSecondsRealtime(1f);
-        PanelWin.SetActive(true);
-        ActualizarScores();
-        _audioController.clip = Ovacion;
-        _audioController.Play();
+        yield return new WaitForSecondsRealtime(0.75f);
+        PanelWin.SetActive(true);        
+        ProduceSound(Ovacion);
     }
     IEnumerator LoseEvent()
     {
-        _audioController.clip = Golpe;
-        _audioController.Play();
+        ProduceSound(Golpe);
         for (int i = 0; i < _playerController.btnsGame.Length; i++)
         {
             _playerController.btnsGame[i].interactable = false;
@@ -197,21 +181,6 @@ public class GameController : MonoBehaviour
         _audioController.clip = Ovacion;
         _audioController.Play();
     }
-    IEnumerator ChangedData()
-    {
-        if(tmp < _score.ScoreData)
-        {
-            x += 1;
-            y = Mathf.Clamp(x, _coins.ScoreData - coins, _coins.ScoreData);
-            txtCoins.text = "" + (int)y;
-
-            m += 1;
-            n = Mathf.Clamp(m, _score.ScoreData - score, _score.ScoreData);
-            txtScore.text = "Score: " + (int)n;
-            yield return new WaitForSecondsRealtime(0.015f);
-        }
-        StartCoroutine(ChangedData());
-    }
     void ActualizarScores()
     {
         tmp = _score.ScoreData;
@@ -223,7 +192,29 @@ public class GameController : MonoBehaviour
         _score.ScoreData = _score.ScoreData + score;
         StartCoroutine(ChangedData());
     }
+    IEnumerator ChangedData()
+    {
+        if (tmp < _score.ScoreData)
+        {
+            x += 1;
+            y = Mathf.Clamp(x, _coins.ScoreData - coins, _coins.ScoreData);
+            yINT = (int)y;
+            txtCoins.text = "" + yINT.ToString("00000");
 
+            m += 1;
+            n = Mathf.Clamp(m, _score.ScoreData - score, _score.ScoreData);
+            nINT = (int)n;
+            txtScore.text = "Score: " + nINT.ToString("0000000");
+
+            //if (n >= _score.ScoreData)
+            //{
+            //    tmp = (int)n;
+            //}
+
+            yield return new WaitForSecondsRealtime(0.015f);
+        }
+        StartCoroutine(ChangedData());
+    }
     public void SetLevelByButton(int id)
     {
         PnlLevel.SetActive(false);
@@ -231,6 +222,30 @@ public class GameController : MonoBehaviour
         LEVELGAME = id;
         StartCoroutine(LevelGame(LEVELGAME));
     }
-
+    public void ScreamPause()
+    {
+        if (!isPause)
+        {
+            PanelPause.SetActive(true);
+            isPause = true;
+        }
+        else
+        {
+            PanelPause.SetActive(false);
+            isPause = false;
+        }
+    }
+    void ProduceSound(AudioClip clip)
+    {
+        GameObject tmp = Instantiate(_audioController.gameObject, transform.position, Quaternion.identity);
+        tmp.GetComponent<AudioSource>().clip = clip;
+        tmp.GetComponent<AudioSource>().Play();
+        Destroy(tmp, clip.length);
+    }
+    public int LimitRamdomSlots()
+    {
+        int x = Random.Range(1, 7);
+        return x;
+    }
 }
  

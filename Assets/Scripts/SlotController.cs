@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class SlotController : MonoBehaviour
 {
-    [SerializeField] Animator anit;
+    public Animator anit;
     public int id = 0;
-    private void Awake()
+    
+    public void Abierto()
     {
-        anit = GetComponent<Animator>();        
+        anit.SetTrigger("Abrir");
     }
 }
